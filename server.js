@@ -20,7 +20,7 @@ app.get('/ping', (req, res)=>{
 // Proxy endpoint
 app.get('/proxy', async (req, res) => {
   
-  console.log('Id incoming ', req.query.id)
+  
   try {
     const response = await fetch(`https://listenbrainz.org/player/?recording_mbids=${req.query.id}`, {
       method: 'POST',
@@ -29,17 +29,15 @@ app.get('/proxy', async (req, res) => {
       },
     });
     const data = await response.json();
-    // console.log(data)
     res.json(data);
 
   } catch (error) {
+    console.log('Errored in server ', error)
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 app.get('/youtube-search', async (req, res) => {
-  console.log('Here ')
-
   const searchKey = req.query.q;  // Get the search query from the request
   try {
     const encodedSearchKey = encodeURIComponent(searchKey);
