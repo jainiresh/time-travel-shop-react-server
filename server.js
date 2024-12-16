@@ -67,7 +67,7 @@ setInterval(async () => {
   } catch (error) {
     console.error('Error calling server every 5 minutes:', error);
   }
-}, 3000);  
+}, 300000);
 
 app.listen(3001, () => {
   console.log('Server running on http://localhost:3001');
