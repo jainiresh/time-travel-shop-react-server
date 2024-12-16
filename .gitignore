@@ -4,3 +4,5 @@
 /timetravelreact
 
 package-lock.json
+
+.env

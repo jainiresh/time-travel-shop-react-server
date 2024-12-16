@@ -2,6 +2,8 @@ import axios from 'axios';
 import express from 'express';
 import fetch from 'node-fetch';
 const app = express();
+import dotenv from 'dotenv'
+dotenv.config();
 
 // Middleware to handle CORS (you can configure it for your app)
 app.use((req, res, next) => {
@@ -11,9 +13,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/ping', (req, res)=>{
+  return res.status(200).send('Healthy')
+})
+
 // Proxy endpoint
 app.get('/proxy', async (req, res) => {
   
+  console.log('Id incoming ', req.query.id)
   try {
     const response = await fetch(`https://listenbrainz.org/player/?recording_mbids=${req.query.id}`, {
       method: 'POST',
@@ -32,7 +39,7 @@ app.get('/proxy', async (req, res) => {
 
 app.get('/youtube-search', async (req, res) => {
   console.log('Here ')
-  // console.log(req)
+
   const searchKey = req.query.q;  // Get the search query from the request
   try {
     const encodedSearchKey = encodeURIComponent(searchKey);
@@ -51,6 +58,16 @@ app.get('/youtube-search', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch data from YouTube API' });
   }
 });
+
+setInterval(async () => {
+  try {
+    console.log('Calling the server every 5 minutes...');
+    const response = await axios.get(`${process.env.SERVER_URL}/ping`);
+    console.log('Response from server:', response.data);
+  } catch (error) {
+    console.error('Error calling server every 5 minutes:', error);
+  }
+}, 3000);  
 
 app.listen(3001, () => {
   console.log('Server running on http://localhost:3001');
