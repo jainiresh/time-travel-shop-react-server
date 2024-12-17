@@ -13,35 +13,45 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(express.json())
+
 app.get('/ping', (req, res)=>{
   return res.status(200).send('Healthy')
 })
 
-// Proxy endpoint
-app.get('/proxy', async (req, res) => {
-  
-  
+app.post('/proxy', async (req, res) => {
   try {
-    const response = await fetch(`https://listenbrainz.org/player/?recording_mbids=${req.query.id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
-    res.json(data);
+    const payloadIds = req.body; 
+    const result = {};
 
+    for (let id of payloadIds) {
+      const response = await fetch(`https://listenbrainz.org/player/?recording_mbids=${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      let data = await response.json();
+      const tempHold = data.playlist.playlist.track[0].extension["https://musicbrainz.org/doc/jspf#track"].additional_metadata;
+      data = {
+        caa_id: tempHold.caa_id ?? undefined,
+        caa_release_mbid: tempHold.caa_release_mbid ?? undefined
+      }
+      result[id] = data;    
+  }
+  res.json(result);
   } catch (error) {
-    console.log('Errored in server ', error)
+    console.log('Errored in server ', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 app.get('/youtube-search', async (req, res) => {
   const searchKey = req.query.q;  // Get the search query from the request
   try {
     const encodedSearchKey = encodeURIComponent(searchKey);
-    console.log('Encded ', encodedSearchKey)
     const response = await axios.get(
       `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${encodedSearchKey}&videoEmbeddable=true&type=video&key=AIzaSyBqlZs3LBBqUMwljEmkCUahwVDNYfyVP8w`,{
         headers: {
@@ -59,7 +69,6 @@ app.get('/youtube-search', async (req, res) => {
 
 setInterval(async () => {
   try {
-    console.log('Calling the server every 5 minutes...');
     const response = await axios.get(`${process.env.SERVER_URL}/ping`);
     console.log('Response from server:', response.data);
   } catch (error) {
