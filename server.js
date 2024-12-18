@@ -67,6 +67,63 @@ app.get('/youtube-search', async (req, res) => {
   }
 });
 
+app.get('/updateFeature', async (req, res, next) => {
+    const year = req.query.year;
+    // console.log('Incoming year' , year)
+    try {
+        // Step 1: Get access_token
+        const tokenResponse = await axios.post(
+            'https://auth.devcycle.com/oauth/token',
+            new URLSearchParams({
+                grant_type: 'client_credentials',
+                client_id: 'Y6ImngAtSjTyBERlT3zNrHdZ2zaww6eg', // Replace with actual client_id
+                client_secret: 'J3QaZ8MwwIiUAl7JgnxhS-Qq77ZKKcpEacvOZ9OLvnuUFK0EeaSQgMV_km50EQcL', // Replace with actual client_secret
+                audience: 'https://api.devcycle.com/',
+            }),
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        // console.log('Access token:', accessToken);
+        if (!accessToken) {
+            throw new Error('Failed to retrieve access token');
+        }
+
+        // Step 2: Update the feature flag
+        const patchResponse = await axios.patch(
+            'https://api.devcycle.com/v1/projects/mrc-test/features/67595eda24ce862611d6cd85',
+            {
+                variations: [
+                    {
+                        _id: '67595f83905e52af2386a0e4',
+                        key: 'variation-modern',
+                        name: 'Year Variation',
+                        variables: {
+                            'time-machine': year,
+                        },
+                    },
+                ],
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        // console.log('Update response:', patchResponse.data);
+        res.json({success: 1})
+    } catch (error) {
+        console.error('Error in updateFeatureFlagDevCycleApi:', error.message);
+        throw error;
+    }
+})
+
 setInterval(async () => {
   try {
     const response = await axios.get(`${process.env.SERVER_URL}/ping`);
@@ -75,6 +132,8 @@ setInterval(async () => {
     console.error('Error calling server every 5 minutes:', error);
   }
 }, 300000);
+
+
 
 app.listen(3001, () => {
   console.log('Server running on http://localhost:3001');
