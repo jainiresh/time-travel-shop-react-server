@@ -69,7 +69,6 @@ app.get('/youtube-search', async (req, res) => {
 
 app.get('/updateFeature', async (req, res, next) => {
     const year = req.query.year;
-    // console.log('Incoming year' , year)
     try {
         // Step 1: Get access_token
         const tokenResponse = await axios.post(
@@ -88,7 +87,6 @@ app.get('/updateFeature', async (req, res, next) => {
         );
 
         const accessToken = tokenResponse.data.access_token;
-        // console.log('Access token:', accessToken);
         if (!accessToken) {
             throw new Error('Failed to retrieve access token');
         }
@@ -116,11 +114,10 @@ app.get('/updateFeature', async (req, res, next) => {
             }
         );
 
-        // console.log('Update response:', patchResponse.data);
         res.json({success: 1})
     } catch (error) {
-        console.error('Error in updateFeatureFlagDevCycleApi:', error.message);
-        throw error;
+        console.error('Error in updateFeatureFlagDevCycleApi:', error);
+        // throw error;
     }
 })
 
